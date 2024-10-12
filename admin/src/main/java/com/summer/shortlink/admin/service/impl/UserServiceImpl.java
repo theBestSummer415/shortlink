@@ -9,12 +9,17 @@ import com.summer.shortlink.admin.dao.entity.UserDO;
 import com.summer.shortlink.admin.dao.mapper.UserMapper;
 import com.summer.shortlink.admin.dto.resp.UserRespDTO;
 import com.summer.shortlink.admin.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.redisson.api.RBloomFilter;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
+
+    private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
@@ -27,6 +32,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
         BeanUtils.copyProperties(userDO, result);
         return result;
+    }
+
+    @Override
+    public Boolean hasUsername(String username) {
+        return userRegisterCachePenetrationBloomFilter.contains(username);
+
     }
 
 
