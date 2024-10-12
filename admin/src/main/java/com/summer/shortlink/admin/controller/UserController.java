@@ -1,6 +1,8 @@
 package com.summer.shortlink.admin.controller;
 
 
+import com.summer.shortlink.admin.common.convention.result.Result;
+import com.summer.shortlink.admin.common.convention.result.Results;
 import com.summer.shortlink.admin.dto.resp.UserRespDTO;
 import com.summer.shortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +18,8 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/api/short-link/admin/v1/user/{username}")
-    public UserRespDTO getUserByUsername(@PathVariable("username") String username){
-        return userService.getUserByUsername(username);
+    public Result<UserRespDTO> getUserByUsername(@PathVariable("username") String username){
+        UserRespDTO result = userService.getUserByUsername(username);
+        return Results.success(result);
     }
 }

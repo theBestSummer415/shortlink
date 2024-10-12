@@ -3,6 +3,8 @@ package com.summer.shortlink.admin.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.summer.shortlink.admin.common.convention.exception.ClientException;
+import com.summer.shortlink.admin.common.enums.UserErrorCodeEnum;
 import com.summer.shortlink.admin.dao.entity.UserDO;
 import com.summer.shortlink.admin.dao.mapper.UserMapper;
 import com.summer.shortlink.admin.dto.resp.UserRespDTO;
@@ -20,8 +22,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         UserDO userDO = baseMapper.selectOne(eq);
         UserRespDTO result = new UserRespDTO();
 
-        if(userDO != null)
-            BeanUtils.copyProperties(userDO, result);
+        if(userDO == null)
+            throw new ClientException(UserErrorCodeEnum.USER_NOT_EXIST);
+
+        BeanUtils.copyProperties(userDO, result);
         return result;
     }
 
