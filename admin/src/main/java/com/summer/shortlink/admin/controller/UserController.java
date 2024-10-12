@@ -22,4 +22,6 @@ public class UserController {
         UserRespDTO result = userService.getUserByUsername(username);
         return Results.success(result);
     }
+
+
 }
