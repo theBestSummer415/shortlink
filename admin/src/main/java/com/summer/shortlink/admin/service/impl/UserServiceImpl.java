@@ -49,7 +49,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if(hasUsername(requestParam.getUsername())){
             throw new ClientException(USER_NAME_EXIST);
         }
-        // TODO
+
         UserDO userDO = new UserDO();
         BeanUtils.copyProperties(requestParam, userDO);
         int insert = baseMapper.insert(userDO);
