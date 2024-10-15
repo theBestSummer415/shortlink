@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.summer.shortlink.admin.common.biz.user.UserContext;
 import com.summer.shortlink.admin.dao.entity.GroupDO;
 import com.summer.shortlink.admin.dao.mapper.GroupMapper;
 import com.summer.shortlink.admin.dto.req.GroupSaveReqDTO;
@@ -43,8 +44,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     public List<GroupRespDTO> listGroup() {
         LambdaQueryWrapper<GroupDO> wrapper = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getDelFlag, GROUP_DELETE_FLAG_FALSE)
-                // TODO: 设置用户名
-                // .eq(GroupDO::getUsername, null)
+                // 登录过后，带着token能够访问到用户信息（存在UserContext中）
+                .eq(GroupDO::getUsername, UserContext.getUsername())
                 .orderByDesc(GroupDO::getSortOrder)
                 .orderByDesc(GroupDO::getUpdateTime);
         List<GroupDO> groupDOList = baseMapper.selectList(wrapper);
@@ -56,7 +57,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .eq(GroupDO::getDelFlag, GROUP_DELETE_FLAG_FALSE)
                 .eq(GroupDO::getGid, gid)
                 // TODO: 传入用户名
-                .eq(GroupDO::getUsername, null);
+                .eq(GroupDO::getUsername, UserContext.getUsername());
 
         return baseMapper.selectOne(eq) != null;
     }
