@@ -26,7 +26,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.summer.shortlink.admin.common.constant.RedisCacheConstant.*;
-import static com.summer.shortlink.admin.common.constant.UserStateConstant.USER_DELETE_FLAG_FALSE;
+import static com.summer.shortlink.admin.common.constant.UserConstant.USER_DELETE_FLAG_FALSE;
 import static com.summer.shortlink.admin.common.enums.UserErrorCodeEnum.*;
 
 

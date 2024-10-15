@@ -1,0 +1,52 @@
+package com.summer.shortlink.admin.common.biz.user;
+
+import com.alibaba.fastjson2.JSON;
+import com.summer.shortlink.admin.common.constant.UserConstant;
+import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.StringUtils;
+
+import java.io.IOException;
+import java.net.URLDecoder;
+
+import static com.summer.shortlink.admin.common.constant.RedisCacheConstant.LOGIN_PREFIX;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+
+@RequiredArgsConstructor
+public class UserTransmitFilter implements Filter {
+
+    private final StringRedisTemplate stringRedisTemplate;
+
+    @Override
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+        HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
+        String userId = httpServletRequest.getHeader(UserConstant.USER_ID_KEY);
+
+        String userName = httpServletRequest.getHeader(UserConstant.USER_NAME_KEY);
+        String realName = httpServletRequest.getHeader(UserConstant.REAL_NAME_KEY);
+        if (StringUtils.hasText(userName)) {
+            userName = URLDecoder.decode(userName, UTF_8);
+        }
+        if (StringUtils.hasText(realName)) {
+            realName = URLDecoder.decode(realName, UTF_8);
+        }
+        String token = httpServletRequest.getHeader(UserConstant.USER_TOKEN_KEY);
+
+        // 登录的serviceImpl里会把用户信息存入redis，下一次服务用户带token访问就可以获取到该用户的信息
+        Object userInfoJsonStr = stringRedisTemplate.opsForHash().get(LOGIN_PREFIX + userName, token);
+        if (userInfoJsonStr != null) {
+            UserInfoDTO userInfoDTO = JSON.parseObject(userInfoJsonStr.toString(), UserInfoDTO.class);
+            UserContext.setUser(userInfoDTO);
+        }
+
+
+        try {
+            filterChain.doFilter(servletRequest, servletResponse);
+        } finally {
+            UserContext.removeUser();
+        }
+    }
+}
