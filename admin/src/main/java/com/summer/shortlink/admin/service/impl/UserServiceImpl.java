@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.summer.shortlink.admin.common.biz.user.UserContext;
 import com.summer.shortlink.admin.common.convention.exception.ClientException;
 import com.summer.shortlink.admin.common.enums.UserErrorCodeEnum;
 import com.summer.shortlink.admin.dao.entity.UserDO;
@@ -86,7 +87,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     @Override
     public void update(UserUpdateReqDTO requestParam) {
         // TODO: 验证当前用户名为已登录用户（不能修改别人的信息）
-        LambdaQueryWrapper<UserDO> eq = Wrappers.lambdaQuery(UserDO.class).eq(UserDO::getUsername, requestParam.getUsername());
+        LambdaQueryWrapper<UserDO> eq = Wrappers.lambdaQuery(UserDO.class)
+                .eq(UserDO::getUsername, UserContext.getUsername());
         UserDO userDO = new UserDO();
         BeanUtils.copyProperties(requestParam, userDO);
 

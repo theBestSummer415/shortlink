@@ -52,13 +52,12 @@ public class UserTransmitFilter implements Filter {
                 UserContext.setUser(userInfoDTO);
             }
 
-
-            try {
-                filterChain.doFilter(servletRequest, servletResponse);
-            } finally {
-                // TODO: 每次请求过来，会先执行service部分，再执行这个removeUser的操作
-                UserContext.removeUser();
-            }
+        }
+        try {
+            filterChain.doFilter(servletRequest, servletResponse);
+        } finally {
+            // TODO: 每次请求过来，会先执行service部分，再执行这个removeUser的操作
+            UserContext.removeUser();
         }
     }
 }

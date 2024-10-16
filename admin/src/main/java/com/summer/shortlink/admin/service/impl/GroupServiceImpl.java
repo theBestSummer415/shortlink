@@ -2,12 +2,15 @@ package com.summer.shortlink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.summer.shortlink.admin.common.biz.user.UserContext;
 import com.summer.shortlink.admin.dao.entity.GroupDO;
 import com.summer.shortlink.admin.dao.mapper.GroupMapper;
 import com.summer.shortlink.admin.dto.req.GroupSaveReqDTO;
+import com.summer.shortlink.admin.dto.req.GroupSortReqDTO;
+import com.summer.shortlink.admin.dto.req.GroupUpdateReqDTO;
 import com.summer.shortlink.admin.dto.resp.GroupRespDTO;
 import com.summer.shortlink.admin.service.GroupService;
 import com.summer.shortlink.admin.util.RandomGenerator;
@@ -16,8 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.summer.shortlink.admin.common.constant.GroupStateConstant.GROUP_DELETE_FLAG_FALSE;
-import static com.summer.shortlink.admin.common.constant.GroupStateConstant.GROUP_SORT_ORDER_DEFAULT;
+import static com.summer.shortlink.admin.common.constant.GroupStateConstant.*;
 
 /**
  * 短链接分组服务层
@@ -35,6 +37,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         GroupDO groupDO = GroupDO.builder()
                 .name(requestParam.getName())
                 .gid(gid)
+                .username(UserContext.getUsername())
                 .sortOrder(GROUP_SORT_ORDER_DEFAULT)
                 .build();
         baseMapper.insert(groupDO);
@@ -52,11 +55,47 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         return BeanUtil.copyToList(groupDOList, GroupRespDTO.class);
     }
 
+
+    // TODO: group最开始分片键是name，导致这里更新name一直不成功
+    @Override
+    public boolean updateGroup(GroupUpdateReqDTO requestParam) {
+        LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getGid, requestParam.getGid())
+                .eq(GroupDO::getDelFlag, GROUP_DELETE_FLAG_FALSE);
+        GroupDO groupDO = new GroupDO();
+        groupDO.setName(requestParam.getName());
+        groupDO.setUsername(UserContext.getUsername());
+
+        return baseMapper.update(groupDO, updateWrapper) > 0;
+    }
+
+    @Override
+    public void deleteGroup(String gid) {
+        LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                .eq(GroupDO::getUsername, UserContext.getUsername())
+                .eq(GroupDO::getGid, gid)
+                .eq(GroupDO::getDelFlag, GROUP_DELETE_FLAG_FALSE)
+                .set(GroupDO::getDelFlag, GROUP_DELETE_FLAG_TRUE);
+        baseMapper.update(null, updateWrapper);
+    }
+
+    @Override
+    public void sortGroup(List<GroupSortReqDTO> requestParam) {
+        requestParam.forEach(each -> {
+            LambdaUpdateWrapper<GroupDO> updateWrapper = Wrappers.lambdaUpdate(GroupDO.class)
+                    .eq(GroupDO::getUsername, UserContext.getUsername())
+                    .eq(GroupDO::getGid, each.getGid())
+                    .eq(GroupDO::getDelFlag, GROUP_DELETE_FLAG_FALSE)
+                    .set(GroupDO::getSortOrder, each.getSortOrder());
+            baseMapper.update(null, updateWrapper);
+        });
+    }
+
     private boolean hasGid(String gid) {
         LambdaQueryWrapper<GroupDO> eq = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getDelFlag, GROUP_DELETE_FLAG_FALSE)
                 .eq(GroupDO::getGid, gid)
-                // TODO: 传入用户名
                 .eq(GroupDO::getUsername, UserContext.getUsername());
 
         return baseMapper.selectOne(eq) != null;
