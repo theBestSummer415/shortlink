@@ -1,8 +1,9 @@
 package com.summer.shortlink.admin.common.biz.user;
 
-import com.alibaba.fastjson2.JSON;
+import cn.hutool.core.util.StrUtil;
 import com.google.common.collect.Lists;
 import com.summer.shortlink.admin.common.constant.UserConstant;
+import com.summer.shortlink.admin.common.convention.exception.ClientException;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import java.net.URLDecoder;
 import java.util.List;
 
 import static com.summer.shortlink.admin.common.constant.RedisCacheConstant.LOGIN_PREFIX;
+import static com.summer.shortlink.admin.common.enums.UserErrorCodeEnum.USER_TOKEN_FAIL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 
@@ -45,11 +47,18 @@ public class UserTransmitFilter implements Filter {
             }
             String token = httpServletRequest.getHeader(UserConstant.USER_TOKEN_KEY);
 
+            if(!StrUtil.isAllNotBlank(userName, token)){
+                // TODO: 全局异常拦截器拦截不到Filter里的异常，和前端联调时需要修正
+                throw new ClientException(USER_TOKEN_FAIL);
+            }
+
             // 登录的serviceImpl里会把用户信息存入redis，下一次服务用户带token访问就可以获取到该用户的信息
-            Object userInfoJsonStr = stringRedisTemplate.opsForHash().get(LOGIN_PREFIX + userName, token);
-            if (userInfoJsonStr != null) {
-                UserInfoDTO userInfoDTO = JSON.parseObject(userInfoJsonStr.toString(), UserInfoDTO.class);
-                UserContext.setUser(userInfoDTO);
+            Object userInfoJsonStr = null;
+            try {
+                userInfoJsonStr = stringRedisTemplate.opsForHash().get(LOGIN_PREFIX + userName, token);
+                if(userInfoJsonStr == null) throw new ClientException(USER_TOKEN_FAIL);
+            } catch (Exception e) {
+                throw new ClientException(USER_TOKEN_FAIL);
             }
 
         }
