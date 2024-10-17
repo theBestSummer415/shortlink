@@ -60,4 +60,22 @@
         </dependency>
     </dependencies>
 
+    <!--说是这个plugin可以打包成一个jar应用，而非简单的jar源码包-->
+    <build>
+        <finalName>${project.artifactId}$</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
