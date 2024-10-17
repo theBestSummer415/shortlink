@@ -2,13 +2,16 @@ package com.summer.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.summer.shortlink.project.common.convention.exception.ServiceException;
 import com.summer.shortlink.project.dao.entity.ShortLinkDO;
 import com.summer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.summer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
+import com.summer.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
+import com.summer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.summer.shortlink.project.service.ShortLinkService;
 import com.summer.shortlink.project.util.HashUtil;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +20,7 @@ import org.redisson.api.RBloomFilter;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
-import static com.summer.shortlink.project.common.constant.ShortLinkConstant.SHORT_LINK_ENABLE_TRUE;
-import static com.summer.shortlink.project.common.constant.ShortLinkConstant.SHORT_LINK_MAX_GENERATE_TIMES;
+import static com.summer.shortlink.project.common.constant.ShortLinkConstant.*;
 
 
 @Slf4j
@@ -57,6 +59,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .originUrl(requestParam.getOriginUrl())
                 .gid(requestParam.getGid())
                 .build();
+    }
+
+    @Override
+    public IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam) {
+        LambdaQueryWrapper<ShortLinkDO> eq = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .eq(ShortLinkDO::getGid, requestParam.getGid())
+                .eq(ShortLinkDO::getDelFlag, SHORT_LINK_DEL_FALSE)
+                .eq(ShortLinkDO::getEnableStatus, SHORT_LINK_ENABLE_TRUE);
+        IPage<ShortLinkDO> selectPage = baseMapper.selectPage(requestParam, eq);
+        return selectPage.convert(each ->BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
     }
 
     private String generateSuffix(ShortLinkCreateReqDTO requestParam) {
