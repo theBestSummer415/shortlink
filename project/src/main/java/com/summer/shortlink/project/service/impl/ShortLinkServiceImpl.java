@@ -11,6 +11,7 @@ import com.summer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.summer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.summer.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
+import com.summer.shortlink.project.dto.resp.ShortLinkGroupCountRespDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.summer.shortlink.project.service.ShortLinkService;
 import com.summer.shortlink.project.util.HashUtil;
@@ -19,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 import static com.summer.shortlink.project.common.constant.ShortLinkConstant.*;
 
@@ -69,6 +72,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .eq(ShortLinkDO::getEnableStatus, SHORT_LINK_ENABLE_TRUE);
         IPage<ShortLinkDO> selectPage = baseMapper.selectPage(requestParam, eq);
         return selectPage.convert(each ->BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
+    }
+
+    @Override
+    public List<ShortLinkGroupCountRespDTO> listGroupLinkCount(List<String> requestParam) {
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = Wrappers.lambdaQuery(ShortLinkDO.class)
+                .select(ShortLinkDO::getGid, ShortLinkDO::getShortLinkCount)
+                .in(ShortLinkDO::getGid, requestParam)
+                .groupBy(ShortLinkDO::getGid);
+        List<ShortLinkDO> shortLinkDOS = baseMapper.selectList(queryWrapper);
+
+
+        return BeanUtil.copyToList(shortLinkDOS, ShortLinkGroupCountRespDTO.class);
     }
 
     private String generateSuffix(ShortLinkCreateReqDTO requestParam) {

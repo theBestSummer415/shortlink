@@ -12,12 +12,14 @@ import com.summer.shortlink.admin.dto.req.GroupSaveReqDTO;
 import com.summer.shortlink.admin.dto.req.GroupSortReqDTO;
 import com.summer.shortlink.admin.dto.req.GroupUpdateReqDTO;
 import com.summer.shortlink.admin.dto.resp.GroupRespDTO;
+import com.summer.shortlink.admin.remote.service.ShortLinkRemoteService;
 import com.summer.shortlink.admin.service.GroupService;
 import com.summer.shortlink.admin.util.RandomGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.summer.shortlink.admin.common.constant.GroupStateConstant.*;
 
@@ -27,6 +29,9 @@ import static com.summer.shortlink.admin.common.constant.GroupStateConstant.*;
 @Slf4j
 @Service
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
+    private final ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService() {
+    };
+
     @Override
     public void saveGroup(GroupSaveReqDTO requestParam) {
         String gid = RandomGenerator.generateRandom6();
@@ -52,7 +57,10 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
                 .orderByDesc(GroupDO::getSortOrder)
                 .orderByDesc(GroupDO::getUpdateTime);
         List<GroupDO> groupDOList = baseMapper.selectList(wrapper);
-        return BeanUtil.copyToList(groupDOList, GroupRespDTO.class);
+        Map<String, Integer> groupLinkCountMap = shortLinkRemoteService.listGroupLinkCount(groupDOList.stream().map(GroupDO::getGid).toList());
+        List<GroupRespDTO> groupRespDTOS = BeanUtil.copyToList(groupDOList, GroupRespDTO.class);
+        groupRespDTOS.forEach(each->{each.setShortLinkCount(groupLinkCountMap.get(each.getGid()));});
+        return groupRespDTOS;
     }
 
 

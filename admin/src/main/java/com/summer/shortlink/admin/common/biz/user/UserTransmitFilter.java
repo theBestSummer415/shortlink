@@ -1,6 +1,7 @@
 package com.summer.shortlink.admin.common.biz.user;
 
 import cn.hutool.core.util.StrUtil;
+import com.alibaba.fastjson2.JSON;
 import com.google.common.collect.Lists;
 import com.summer.shortlink.admin.common.constant.UserConstant;
 import com.summer.shortlink.admin.common.convention.exception.ClientException;
@@ -57,6 +58,9 @@ public class UserTransmitFilter implements Filter {
             try {
                 userInfoJsonStr = stringRedisTemplate.opsForHash().get(LOGIN_PREFIX + userName, token);
                 if(userInfoJsonStr == null) throw new ClientException(USER_TOKEN_FAIL);
+
+                UserInfoDTO userInfoDTO = JSON.parseObject(userInfoJsonStr.toString(), UserInfoDTO.class);
+                UserContext.setUser(userInfoDTO);
             } catch (Exception e) {
                 throw new ClientException(USER_TOKEN_FAIL);
             }

@@ -92,4 +92,11 @@ public class ShortLinkDO extends BaseDO{
      * 历史uip
      */
     private Integer totalUip;
+
+
+    /**
+     * 统计数量
+     */
+    @TableField(value = "count(*)")
+    private Integer shortLinkCount;
 }
