@@ -28,7 +28,8 @@ public class UserTransmitFilter implements Filter {
     // TODO: 写死了需要忽略的URI，很丑陋
     private static final List<String> IGNORE_URI = Lists.newArrayList(
             "/api/short-link/admin/v1/user/login",
-            "/api/short-link/admin/v1/user/has-username"
+            "/api/short-link/admin/v1/user/has-username",
+            "/api/short-link/admin/v1/user/register"
     );
 
     @Override

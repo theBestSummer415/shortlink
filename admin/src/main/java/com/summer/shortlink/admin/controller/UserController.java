@@ -36,7 +36,7 @@ public class UserController {
         return Results.success(userService.hasUsername(username));
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public Result<Void> register(@RequestBody UserRegisterReqDTO requestParam){
         userService.register(requestParam);
         return Results.success();

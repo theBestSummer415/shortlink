@@ -12,6 +12,7 @@ import java.util.List;
 public interface GroupService extends IService<GroupDO> {
     void saveGroup(GroupSaveReqDTO groupName);
 
+
     List<GroupRespDTO> listGroup();
 
     boolean updateGroup(GroupUpdateReqDTO requestParam);

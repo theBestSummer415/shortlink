@@ -35,18 +35,20 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Override
     public void saveGroup(GroupSaveReqDTO requestParam) {
         String gid = RandomGenerator.generateRandom6();
-        while (hasGid(gid)) {
+        String username = requestParam.getUsername() == null?UserContext.getUsername() : requestParam.getUsername();
+        while (hasGid(gid, username)) {
             gid = RandomGenerator.generateRandom6();
         }
 
         GroupDO groupDO = GroupDO.builder()
                 .name(requestParam.getName())
                 .gid(gid)
-                .username(UserContext.getUsername())
+                .username(username)
                 .sortOrder(GROUP_SORT_ORDER_DEFAULT)
                 .build();
         baseMapper.insert(groupDO);
     }
+
 
     @Override
     public List<GroupRespDTO> listGroup() {
@@ -100,11 +102,11 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         });
     }
 
-    private boolean hasGid(String gid) {
+    private boolean hasGid(String gid, String username) {
         LambdaQueryWrapper<GroupDO> eq = Wrappers.lambdaQuery(GroupDO.class)
                 .eq(GroupDO::getDelFlag, GROUP_DELETE_FLAG_FALSE)
                 .eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getUsername, UserContext.getUsername());
+                .eq(GroupDO::getUsername, username);
 
         return baseMapper.selectOne(eq) != null;
     }

@@ -9,11 +9,13 @@ import com.summer.shortlink.admin.common.convention.exception.ClientException;
 import com.summer.shortlink.admin.common.enums.UserErrorCodeEnum;
 import com.summer.shortlink.admin.dao.entity.UserDO;
 import com.summer.shortlink.admin.dao.mapper.UserMapper;
+import com.summer.shortlink.admin.dto.req.GroupSaveReqDTO;
 import com.summer.shortlink.admin.dto.req.UserLoginReqDTO;
 import com.summer.shortlink.admin.dto.req.UserRegisterReqDTO;
 import com.summer.shortlink.admin.dto.req.UserUpdateReqDTO;
 import com.summer.shortlink.admin.dto.resp.UserLoginRespDTO;
 import com.summer.shortlink.admin.dto.resp.UserRespDTO;
+import com.summer.shortlink.admin.service.GroupService;
 import com.summer.shortlink.admin.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
@@ -27,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static com.summer.shortlink.admin.common.constant.GroupStateConstant.GROUP_DEFAULT_NAME;
 import static com.summer.shortlink.admin.common.constant.RedisCacheConstant.*;
 import static com.summer.shortlink.admin.common.constant.UserConstant.USER_DELETE_FLAG_FALSE;
 import static com.summer.shortlink.admin.common.enums.UserErrorCodeEnum.*;
@@ -39,6 +42,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final RedissonClient redissonClient;
     private final StringRedisTemplate stringRedisTemplate;
+    private final GroupService groupService;
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
@@ -78,7 +82,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                     throw new ClientException(USER_EXIST);
                 }
 
-
+                groupService.saveGroup(new GroupSaveReqDTO(GROUP_DEFAULT_NAME, requestParam.getUsername()));
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
                 return;
             }
