@@ -39,8 +39,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-import static com.summer.shortlink.project.common.constant.RedisKeyConstant.GOTO_SHORT_LINK_KEY_FORMAT;
-import static com.summer.shortlink.project.common.constant.RedisKeyConstant.GOTO_SHORT_LINK_LOCK_KEY_FORMAT;
+import static com.summer.shortlink.project.common.constant.RedisKeyConstant.*;
 import static com.summer.shortlink.project.common.constant.ShortLinkConstant.*;
 
 
@@ -174,6 +173,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         String fullShortUrl = serverName + "/" + shortUri;
         String originalLink = redisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY_FORMAT, fullShortUrl));
 
+        // TODO-Done: 布隆过滤器
+        if( ! shortUriCreateCacheBloomFilter.contains(fullShortUrl)) return;
+        // TODO-Done：空值查询
+        String nullValue = redisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_NULL_VALUE_KEY_FORMAT, fullShortUrl));
+        if (StrUtil.isNotBlank(nullValue)) return;
+
+
         if(StrUtil.isBlank(originalLink)){
             // TODO-Done: 分布式锁，防止key失效，大量请求同时打到数据库，这里用分布式锁
             RLock lock = redissonClient.getLock(String.format(GOTO_SHORT_LINK_LOCK_KEY_FORMAT, fullShortUrl));
@@ -192,6 +198,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper1);
                 if(shortLinkGotoDO == null){
                     //TODO: 此处需要进行风控，防止攻击者一直请求不存在的shortUrl
+                    redisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_NULL_VALUE_KEY_FORMAT), GOTO_SHORT_LINK_NULL_VALUE, NULL_VALUE_EXPIRE, NULL_VALUE_EXPIRE_UNIT);
                     return;
                 }
 
