@@ -1,13 +1,20 @@
 package com.summer.shortlink.project.dao.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
 @Data
 @TableName("t_link")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ShortLinkDO extends BaseDO{
 
 
@@ -97,6 +104,6 @@ public class ShortLinkDO extends BaseDO{
     /**
      * 统计数量
      */
-    @TableField(value = "count(*)")
+    @TableField(value = "count(*)", insertStrategy = FieldStrategy.NEVER, updateStrategy = FieldStrategy.NEVER, select = false)
     private Integer shortLinkCount;
 }

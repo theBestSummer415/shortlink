@@ -5,9 +5,12 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.summer.shortlink.project.dao.entity.ShortLinkDO;
 import com.summer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.summer.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.summer.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkGroupCountRespDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 import java.util.List;
 
@@ -23,4 +26,8 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
     IPage<ShortLinkPageRespDTO> pageShortLink(ShortLinkPageReqDTO requestParam);
 
     List<ShortLinkGroupCountRespDTO> listGroupLinkCount(List<String> requestParam);
+
+    void updateLink(ShortLinkUpdateReqDTO requestParam);
+
+    void redirectUrl(String shortUri, ServletRequest request, ServletResponse response);
 }

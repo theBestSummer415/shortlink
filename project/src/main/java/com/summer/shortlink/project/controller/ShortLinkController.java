@@ -1,15 +1,21 @@
 package com.summer.shortlink.project.controller;
 
+import cn.hutool.http.server.HttpServerRequest;
+import cn.hutool.http.server.HttpServerResponse;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.summer.shortlink.project.common.convention.result.Result;
 import com.summer.shortlink.project.common.convention.result.Results;
 import com.summer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.summer.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.summer.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkGroupCountRespDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.summer.shortlink.project.service.ShortLinkService;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,5 +50,19 @@ public class ShortLinkController {
     @GetMapping("/count")
     public Result<List<ShortLinkGroupCountRespDTO>> listGroupLinkCount(@RequestParam List<String> requestParam){
         return Results.success(shortLinkService.listGroupLinkCount(requestParam));
+    }
+
+    @PostMapping("/update")
+    public Result<Void> updateLink(@RequestBody ShortLinkUpdateReqDTO requestParam){
+
+        shortLinkService.updateLink(requestParam);
+        return Results.success();
+    }
+
+    @GetMapping("/{short-uri}")
+    public ResponseEntity<Void> redirectUrl(@PathVariable("short-uri")String shortUri, ServletRequest request, ServletResponse response){
+        shortLinkService.redirectUrl(shortUri, request, response);
+
+
     }
 }
