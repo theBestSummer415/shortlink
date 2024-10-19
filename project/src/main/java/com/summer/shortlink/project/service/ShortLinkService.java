@@ -12,6 +12,7 @@ import com.summer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface ShortLinkService extends IService<ShortLinkDO> {
@@ -29,5 +30,5 @@ public interface ShortLinkService extends IService<ShortLinkDO> {
 
     void updateLink(ShortLinkUpdateReqDTO requestParam);
 
-    void redirectUrl(String shortUri, ServletRequest request, ServletResponse response);
+    void redirectUrl(String shortUri, ServletRequest request, ServletResponse response) throws IOException;
 }

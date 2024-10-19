@@ -17,6 +17,7 @@ public class ShortLinkCreateReqDTO {
     private String domain;
 
 
+
     /**
      * 原始链接
      */

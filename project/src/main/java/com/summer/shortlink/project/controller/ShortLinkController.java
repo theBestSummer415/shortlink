@@ -1,7 +1,5 @@
 package com.summer.shortlink.project.controller;
 
-import cn.hutool.http.server.HttpServerRequest;
-import cn.hutool.http.server.HttpServerResponse;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.summer.shortlink.project.common.convention.result.Result;
 import com.summer.shortlink.project.common.convention.result.Results;
@@ -15,18 +13,17 @@ import com.summer.shortlink.project.service.ShortLinkService;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/short-link/project/v1/link")
 @RequiredArgsConstructor
 public class ShortLinkController {
     private final ShortLinkService shortLinkService;
 
-    @PostMapping("/create")
+    @PostMapping("/api/short-link/project/v1/link/create")
     public Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam){
 
         return Results.success(shortLinkService.createShortLink(requestParam));
@@ -37,7 +34,7 @@ public class ShortLinkController {
      * @param requestParam gid
      * @return
      */
-    @GetMapping("/page")
+    @GetMapping("/api/short-link/project/v1/link/page")
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam){
         return Results.success(shortLinkService.pageShortLink(requestParam));
     }
@@ -47,12 +44,12 @@ public class ShortLinkController {
      * @param requestParam gids
      * @return
      */
-    @GetMapping("/count")
+    @GetMapping("/api/short-link/project/v1/link/count")
     public Result<List<ShortLinkGroupCountRespDTO>> listGroupLinkCount(@RequestParam List<String> requestParam){
         return Results.success(shortLinkService.listGroupLinkCount(requestParam));
     }
 
-    @PostMapping("/update")
+    @PostMapping("/api/short-link/project/v1/link/update")
     public Result<Void> updateLink(@RequestBody ShortLinkUpdateReqDTO requestParam){
 
         shortLinkService.updateLink(requestParam);
@@ -60,9 +57,8 @@ public class ShortLinkController {
     }
 
     @GetMapping("/{short-uri}")
-    public ResponseEntity<Void> redirectUrl(@PathVariable("short-uri")String shortUri, ServletRequest request, ServletResponse response){
+    public void redirectUrl(@PathVariable("short-uri")String shortUri, ServletRequest request, ServletResponse response) throws IOException {
         shortLinkService.redirectUrl(shortUri, request, response);
-
 
     }
 }
