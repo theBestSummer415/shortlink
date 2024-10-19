@@ -22,6 +22,7 @@ import com.summer.shortlink.project.dto.resp.ShortLinkGroupCountRespDTO;
 import com.summer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.summer.shortlink.project.service.ShortLinkService;
 import com.summer.shortlink.project.util.HashUtil;
+import com.summer.shortlink.project.util.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,8 +37,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static com.summer.shortlink.project.common.constant.RedisKeyConstant.*;
 import static com.summer.shortlink.project.common.constant.ShortLinkConstant.*;
@@ -82,6 +85,13 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
         }
 
+        // TODO-Done: 缓存预热
+        redisTemplate.opsForValue().set(
+                StrUtil.format(GOTO_SHORT_LINK_KEY_FORMAT, fullShortUrl),
+                requestParam.getOriginUrl(),
+                LinkUtil.getLinkCacheValidDate(requestParam.getValidDate()),
+                TimeUnit.MILLISECONDS
+        );
         shortUriCreateCacheBloomFilter.add(fullShortUrl);
 
         return ShortLinkCreateRespDTO.builder()
@@ -198,7 +208,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(queryWrapper1);
                 if(shortLinkGotoDO == null){
                     //TODO: 此处需要进行风控，防止攻击者一直请求不存在的shortUrl
-                    redisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_NULL_VALUE_KEY_FORMAT), GOTO_SHORT_LINK_NULL_VALUE, NULL_VALUE_EXPIRE, NULL_VALUE_EXPIRE_UNIT);
+                    redisTemplate.opsForValue().set(
+                            String.format(GOTO_SHORT_LINK_NULL_VALUE_KEY_FORMAT, fullShortUrl),
+                            GOTO_SHORT_LINK_NULL_VALUE,
+                            NULL_VALUE_EXPIRE,
+                            NULL_VALUE_EXPIRE_UNIT
+                    );
                     return;
                 }
 
@@ -210,7 +225,22 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 ShortLinkDO shortLinkDO = baseMapper.selectOne(queryWrapper2);
 
                 if (shortLinkDO != null){
-                    redisTemplate.opsForValue().set(String.format(GOTO_SHORT_LINK_KEY_FORMAT, fullShortUrl), shortLinkDO.getOriginUrl());
+                    // TODO: 有效期已经再当前时间以前，缓存置空，但数据库里的数据还没有处理
+                    if(shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date())){
+                        redisTemplate.opsForValue().set(
+                                String.format(GOTO_SHORT_LINK_NULL_VALUE_KEY_FORMAT, fullShortUrl),
+                                GOTO_SHORT_LINK_NULL_VALUE,
+                                NULL_VALUE_EXPIRE,
+                                NULL_VALUE_EXPIRE_UNIT
+                        );
+                    }
+
+                    redisTemplate.opsForValue().set(
+                            StrUtil.format(GOTO_SHORT_LINK_KEY_FORMAT, fullShortUrl),
+                            shortLinkDO.getOriginUrl(),
+                            LinkUtil.getLinkCacheValidDate(shortLinkDO.getValidDate()),
+                            TimeUnit.MILLISECONDS
+                    );
                     ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
                 }
             }finally {
