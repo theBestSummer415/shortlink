@@ -184,10 +184,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         String originalLink = redisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_KEY_FORMAT, fullShortUrl));
 
         // TODO-Done: 布隆过滤器
-        if( ! shortUriCreateCacheBloomFilter.contains(fullShortUrl)) return;
+        if( ! shortUriCreateCacheBloomFilter.contains(fullShortUrl)){
+            ((HttpServletResponse) response).sendRedirect(NOT_FOUND_REDIRECT);
+            return;
+        }
         // TODO-Done：空值查询
         String nullValue = redisTemplate.opsForValue().get(String.format(GOTO_SHORT_LINK_NULL_VALUE_KEY_FORMAT, fullShortUrl));
-        if (StrUtil.isNotBlank(nullValue)) return;
+        if (StrUtil.isNotBlank(nullValue)){
+            ((HttpServletResponse) response).sendRedirect(NOT_FOUND_REDIRECT);
+            return;
+        }
 
 
         if(StrUtil.isBlank(originalLink)){
@@ -214,6 +220,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             NULL_VALUE_EXPIRE,
                             NULL_VALUE_EXPIRE_UNIT
                     );
+                    ((HttpServletResponse) response).sendRedirect(NOT_FOUND_REDIRECT);
                     return;
                 }
 
@@ -233,6 +240,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                                 NULL_VALUE_EXPIRE,
                                 NULL_VALUE_EXPIRE_UNIT
                         );
+                        ((HttpServletResponse) response).sendRedirect(NOT_FOUND_REDIRECT);
                     }
 
                     redisTemplate.opsForValue().set(
